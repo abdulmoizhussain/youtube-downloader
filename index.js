@@ -2,11 +2,17 @@ const config = require("./config.json");
 const fs = require("fs");
 const ytdl = require("ytdl-core");
 const { getInfo, getBasicInfo, } = ytdl;
+const sample = require("./basic_info_sample.json");
 
 const BYTES_IN_ONE_MB = 1048576;
 
 (async function () {
   try {
+
+
+    sample.formats.forEach(v => console.log(v.quality, v.qualityLabel, v.mimeType));
+
+    return;
     const info = await getBasicInfo(config.video_url);
 
     // const af = info.player_response.streamingData.adaptiveFormats.map(v => ({ ...v, url: null }));
