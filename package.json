@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cli-progress": "^3.11.1",
     "fs": "0.0.1-security",
     "ytdl-core": "^4.11.0"
   }
