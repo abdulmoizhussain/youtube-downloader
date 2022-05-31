@@ -34,6 +34,11 @@ const readline = Readline.createInterface({
   console.log("Video Title:", videoInfo.videoDetails.title, "\n");
 
   formats = videoInfo.formats.map((v, i) => {
+    // TODO use the following properties instead of regex (remove regex).
+    // v.hasAudio;
+    // v.hasVideo;
+    // v.container;
+
     const regexMatch = v.mimeType.match(/([a-zA-Z0-9]+)\/([a-zA-Z0-9]+);*/);
     const mediaType = regexMatch[1];
     const fileFormat = regexMatch[2];
