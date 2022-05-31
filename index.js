@@ -1,3 +1,6 @@
+// sources:
+// how to add cookies: https://github.com/fent/node-ytdl-core/blob/master/example/cookies.js
+
 const config = require("./config.json");
 const cliProgress = require('cli-progress');
 const fs = require("fs");
