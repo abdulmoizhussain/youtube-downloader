@@ -1,5 +1,8 @@
 # Media files
 *.mp4
+*.webm
+*.opus
+*.mp3
 
 # Logs
 logs
