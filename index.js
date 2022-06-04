@@ -8,13 +8,20 @@ const ytdl = require("ytdl-core");
 const { getInfo } = ytdl;
 const Readline = require("readline");
 const sample = require("./basic_info_sample.json");
+const winston = require("winston");
+const { format } = winston;
+
+const logger = winston.createLogger({
+  transports: [
+    // new winston.transports.Console(),
+    new winston.transports.File({
+      filename: './logs/combined.log',
+      format: format.combine(format.timestamp({}), format.splat(), format.simple())
+    })
+  ]
+});
 
 const BYTES_IN_ONE_MB = 1048576;
-
-/**
- * @type {ytdl.videoFormat[]}
- */
-let formats;
 
 /**
  * @type {ytdl.videoInfo}
@@ -30,21 +37,22 @@ const readline = Readline.createInterface({
   output: process.stdout,
 });
 
+const question = require("util").promisify(readline.question).bind(readline);
+
 (async function () {
-  console.log("\nTrying to fetching video information..");
-  videoInfo = await getInfo(config.video_url);
+  const video_url = await question("\nEnter video URL: ");
 
-  console.log("Video Title:", videoInfo.videoDetails.title, "\n");
+  console.log("\nTrying to fetch video information..");
+  logger.info("Trying to fetch video information: %s", video_url);
 
-  formats = videoInfo.formats.map((v, i) => {
-    // TODO use the following properties instead of regex (remove regex).
-    // v.hasAudio;
-    // v.hasVideo;
-    // v.container;
+  videoInfo = await getInfo(video_url);
 
+  console.log("\nVideo found! Title:", videoInfo.videoDetails.title, "\n");
+  logger.info("Video found! Title: %s", videoInfo.videoDetails.title);
+
+  videoInfo.formats.forEach((v, i) => {
     const regexMatch = v.mimeType.match(/([a-zA-Z0-9]+)\/([a-zA-Z0-9]+);*/);
-    const mediaType = regexMatch[1];
-    const fileFormat = regexMatch[2];
+    const mediaTypeAndContainer = regexMatch[0];
     const sizeInMb = (v.contentLength / BYTES_IN_ONE_MB).toFixed(3);
     const qualityLabel = (v.qualityLabel || "").padEnd(11, ' ');
 
@@ -53,36 +61,30 @@ const readline = Readline.createInterface({
       v.itag.toString().padEnd(3, ' '),
       qualityLabel,
       (sizeInMb + " MB").padStart(12, ' '),
-      v.mimeType,
+      mediaTypeAndContainer,
+      v.hasAudio ? "" : "(no audio)"
     );
-
-    return {
-      itag: v.itag,
-      quality: v.quality,
-      qualityLabel: qualityLabel,
-      mimeType: v.mimeType,
-      mediaType: mediaType,
-      fileFormat: fileFormat,
-    };
   });
 
   readline.question("\nType format-index and enter: ", downloadVideoWithSelectedFormat);
 
-})().catch(console.log);
+})().catch(catcher);
+
 
 /**
  * @param {String} userInputFormatIndex
  */
 function downloadVideoWithSelectedFormat(userInputFormatIndex) {
   const selectedIndex = parseInt(userInputFormatIndex);
-  const format = formats[selectedIndex];
-  const { fileFormat, itag } = format;
+  const format = videoInfo.formats[selectedIndex];
+  const { itag, container } = format;
 
   // for windows file naming.
   const cleanedTitle = videoInfo.videoDetails.title.replace(/[\/\\\:\*\?\"\<\>\|]+/g, "");
-  const filePath = `./${cleanedTitle}-${itag}.${fileFormat}`;
+  const filePath = `./${cleanedTitle}-${itag}.${container}`;
 
   console.log("\n", "Saving file as: ", filePath, "\n");
+  logger.info("Saving file as: %s", filePath);
 
   progressBar.start(100, 0, { totalDownloadedMegaBytes: 0, totalMegaBytes: 0 });
 
@@ -110,4 +112,12 @@ function onProgressCallback(_, totalBytesDownloaded, totalBytes) {
 function onDownloadEnd() {
   progressBar.stop();
   readline.close();
+}
+
+
+function catcher(error) {
+  progressBar.stop();
+  readline.close();
+  console.log(error);
+  logger.log(error);
 }
