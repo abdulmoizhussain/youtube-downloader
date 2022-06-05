@@ -34,7 +34,7 @@ function StartUp() {
 }
 
 async function Program() {
-  const { value: video_url } = await inquirer.prompt([{ type: "input", name: "value", message: "Enter video link/URL:" }]);
+  const { value: video_url } = await inquirer.prompt([{ type: "input", name: "value", message: "Enter video link (Right-Click in black area to paste):" }]);
 
   console.log("\nTrying to fetch video information..");
   logger.info("Trying to fetch video information: %s", video_url);
