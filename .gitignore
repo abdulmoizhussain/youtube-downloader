@@ -3,6 +3,7 @@
 *.webm
 *.opus
 *.mp3
+*.exe
 
 # Logs
 logs

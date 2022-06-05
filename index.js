@@ -7,6 +7,7 @@ const ytdl = require("ytdl-core");
 const inquirer = require('inquirer');
 const { getInfo } = ytdl;
 const winston = require("winston");
+const { join } = require('path');
 const { format: winstonFormat } = winston;
 
 const logger = winston.createLogger({
@@ -26,7 +27,13 @@ const progressBar = new cliProgress.SingleBar({
 }, cliProgress.Presets.shades_classic);
 
 
-(async function () {
+StartUp();
+
+function StartUp() {
+  Program().catch(catcher);
+}
+
+async function Program() {
   const { value: video_url } = await inquirer.prompt([{ type: "input", name: "value", message: "Enter video link/URL:" }]);
 
   console.log("\nTrying to fetch video information..");
@@ -40,16 +47,16 @@ const progressBar = new cliProgress.SingleBar({
   const choices = videoInfo.formats.map((format, index) => {
     const regexMatch = format.mimeType.match(/([a-zA-Z0-9]+)\/([a-zA-Z0-9]+);*/);
     const mediaTypeAndContainer = regexMatch[0];
-    const sizeInMb = (format.contentLength / BYTES_IN_ONE_MB).toFixed(3);
+    const sizeInMb = format.contentLength === undefined ? "(unknown size)" : (format.contentLength / BYTES_IN_ONE_MB).toFixed(3) + " MB";
     const qualityLabel = (format.qualityLabel || "").padEnd(11, ' ');
 
     const choiceMessageSplitted = [
       // i.toString().padStart(3, " "), // index
       // v.itag.toString().padEnd(3, ' '), // itag
       qualityLabel,
-      (sizeInMb + " MB").padStart(12, ' '),
+      sizeInMb.padStart(14, ' '),
       mediaTypeAndContainer,
-      format.hasAudio ? "" : "(no audio)",
+      format.hasAudio ? "" : "(without audio)",
     ];
 
     return { name: choiceMessageSplitted.join(" "), value: index };
@@ -78,8 +85,7 @@ const progressBar = new cliProgress.SingleBar({
     .on("end", onDownloadEnd)
     .on("progress", onProgressCallback)
     .pipe(fs.createWriteStream(filePath));
-
-})().catch(catcher);
+}
 
 /**
  * @param {Number} _
@@ -98,12 +104,24 @@ function onProgressCallback(_, totalBytesDownloaded, totalBytes) {
 
 function onDownloadEnd() {
   progressBar.stop();
+  console.log("Download complete! Need to download another video?\n");
+  StartUp();
 }
 
 function catcher(error) {
   if (progressBar) {
     progressBar.stop();
   }
-  console.log(error);
-  logger.error(error);
+  if (typeof error.toString === "function") {
+    logger.error(error.toString());
+  }
+  else if (typeof error.message === "string") {
+    logger.error(error.message);
+  }
+  else {
+    logger.error(JSON.stringify(error));
+  }
+
+  console.log("\nSome error occurred! Try again.");
+  StartUp();
 }

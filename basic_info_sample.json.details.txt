@@ -1,8 +1,0 @@
-some useful properties are:
-
-info.player_response.streamingData.formats
-info.player_response.streamingData.adaptiveFormats
-
-info.videoDetails.title
-info.videoDetails.description
-info.videoDetails.lengthSeconds

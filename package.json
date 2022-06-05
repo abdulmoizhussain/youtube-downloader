@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-win-x64": "pkg --target node14-win-x64 index.js --output ./build/youtube-downloader-x64.exe"
   },
   "author": "",
   "license": "ISC",
