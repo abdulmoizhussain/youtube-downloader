@@ -3,11 +3,11 @@
 
 const cliProgress = require('cli-progress');
 const fs = require("fs");
+const path = require("path");
 const ytdl = require("ytdl-core");
 const inquirer = require('inquirer');
 const { getInfo } = ytdl;
 const winston = require("winston");
-const { join } = require('path');
 const { format: winstonFormat } = winston;
 
 const logger = winston.createLogger({
@@ -21,6 +21,10 @@ const logger = winston.createLogger({
 });
 
 const BYTES_IN_ONE_MB = 1048576;
+/**
+ * @type {string}
+ */
+let filePath;
 
 const progressBar = new cliProgress.SingleBar({
   format: 'Downloading [{bar}] {percentage}% | {totalDownloadedMegaBytes}/{totalMegaBytes} MB'
@@ -67,16 +71,18 @@ async function Program() {
     type: "list",
     name: "value",
     message: "Select media type and format:",
+    loop: false,
+    pageSize: videoInfo.formats.length,
   }]);
 
   const format = videoInfo.formats[selectedIndex];
-  const { itag, container } = format;
+  const { qualityLabel, itag, container } = format;
 
   // to follow windows file naming convention.
   const cleanedTitle = videoInfo.videoDetails.title.replace(/[\/\\\:\*\?\"\<\>\|]+/g, "");
-  const filePath = `./${cleanedTitle}-${itag}.${container}`;
+  filePath = `./${cleanedTitle}-${qualityLabel}-${itag}.${container}`;
 
-  console.log("\n", "Saving file as: ", filePath, "\n");
+  console.log(`\nSaving file as: ${filePath}\n`);
   logger.info("Saving file as: %s", filePath);
 
   progressBar.start(100, 0, { totalDownloadedMegaBytes: 0, totalMegaBytes: 0 });
@@ -104,7 +110,11 @@ function onProgressCallback(_, totalBytesDownloaded, totalBytes) {
 
 function onDownloadEnd() {
   progressBar.stop();
-  console.log("Download complete! Need to download another video?\n");
+  console.log("\nDownload complete!");
+  const fileLocation = `Video has been saved at: ${path.resolve(filePath)}`;
+  console.log(fileLocation);
+  logger.info(fileLocation);
+  console.log("\nNeed to download another video?");
   StartUp();
 }
 
