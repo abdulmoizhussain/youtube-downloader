@@ -10,10 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cli-progress": "^3.11.1",
+    "cli-progress": "^3.11.2",
     "fs": "0.0.1-security",
     "inquirer": "^8.2.4",
-    "winston": "^3.7.2",
-    "ytdl-core": "^4.11.0"
+    "winston": "^3.8.1",
+    "ytdl-core": "^4.11.2"
   }
 }
